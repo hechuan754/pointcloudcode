@@ -90,16 +90,7 @@
             android:layout_height="wrap_content"
             android:text="上传"/>
 
-        <Space
-            android:layout_width="16dp"
-            android:layout_height="1dp"/>
 
-        <!-- 新添加的按钮，用于从相册中选择照片 -->
-        <Button
-            android:id="@+id/btnSelectFromAlbum"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="相册"/>
 
 
     </LinearLayout>

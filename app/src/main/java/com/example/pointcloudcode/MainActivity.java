@@ -5,10 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import com.example.pointcloudcode.Permission;
-
-import static android.util.Base64.*;
-
 import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
 import android.content.Intent;
@@ -16,11 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import android.net.Uri;
-import java.io.FileOutputStream;
-import android.database.Cursor;
 import android.os.Build;
-import android.Manifest;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -31,16 +23,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -57,16 +45,11 @@ public class MainActivity extends AppCompatActivity {
     private Socket socket;  // 成员变量，用于保存连接
     final int TAKE_PHOTO = 1;
 
-    private static final int SELECT_PHOTO = 2;
-    private static final int CAMERA_PERMISSION_CODE = 1001;
-    private static final int GALLERY_PERMISSION_REQUEST_CODE = 1002;
-
-    Uri imageUri;
-//    File outputImage;
-
     private static final int UPDATE_ok = 0;
     private static final int UPDATE_UI = 1;
     private static final int ERROR = 2;
+
+    Uri imageUri;
 
     // 主线程创建消息处理器
     @SuppressLint("HandlerLeak")
@@ -85,23 +68,17 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private boolean isConnected = false;
+
     @Override
     protected void onStart() {
         super.onStart();
         Permission.checkPermissionAndProceed(this, Permission.CAMERA_PERMISSION_CODE);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == GALLERY_PERMISSION_REQUEST_CODE) {
-            if (Permission.isPermissionGranted(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-
-                selectPhotoFromAlbum();
-            } else {
-                // 权限被拒绝，显示适当的提示
-                Toast.makeText(this, "需要相册存储权限来选择照片", Toast.LENGTH_SHORT).show();
-            }
-        }
+        // 省略权限请求结果处理
     }
 
     @Override
@@ -125,12 +102,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
         initViews();
         initEvent();
     }
 
-    //初始化控件
+    // 初始化控件
     private void initViews() {
         img_photo = findViewById(R.id.img_photo);
         client_submit = findViewById(R.id.client_submit);
@@ -142,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
 
         // 为btnConnectServer赋值
         btnConnectServer = findViewById(R.id.btnConnectServer);
-
     }
 
     private void handleUIUpdate(String content) {
@@ -176,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         }.start();
     }
 
-    //进行拍照
+    // 进行拍照
     private void initEvent() {
         client_submit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -190,28 +165,27 @@ public class MainActivity extends AppCompatActivity {
                 String port = editTextPort.getText().toString();
 
                 String filename = "test.png";
-                outputImage = new File(getExternalCacheDir(),filename);  //拍照后照片存储路径
+                outputImage = new File(getExternalCacheDir(), filename);  // 拍照后照片存储路径
                 try {
-                    if (outputImage.exists()){
-                    outputImage.delete();
-                }
+                    if (outputImage.exists()) {
+                        outputImage.delete();
+                    }
                     outputImage.createNewFile();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 if (Build.VERSION.SDK_INT >= 24) {
-                    //图片的url
+                    // 图片的url
                     imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
                 } else {
                     imageUri = Uri.fromFile(outputImage);
                 }
-                //跳转界面到系统自带的拍照界面
-                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");  //调用手机拍照功能其实就是启动一个activity
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);  //指定图片存放位置，指定后，在onActivityResult里得到的Data将为null
-                startActivityForResult(intent, TAKE_PHOTO);  //开启相机
+                // 跳转界面到系统自带的拍照界面
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");  // 调用手机拍照功能其实就是启动一个activity
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);  // 指定图片存放位置，在onActivityResult里得到的Data将为null
+                startActivityForResult(intent, TAKE_PHOTO);  // 开启相机
             }
         });
-
 
         // 新添加的按钮的事件处理
         btnConnectServer.setOnClickListener(new View.OnClickListener() {
@@ -239,25 +213,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-        // 从相册中选择照片
-        Button btnSelectFromAlbum = findViewById(R.id.btnSelectFromAlbum);
-        btnSelectFromAlbum.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // 检查相册存储权限
-                if (Permission.isPermissionGranted(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    // 已授予权限，选择照片
-                    selectPhotoFromAlbum();
-                } else {
-                    // 请求相册存储权限
-                    Permission.requestPermission(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, GALLERY_PERMISSION_REQUEST_CODE);
-                }
-            }
-        });
-
     }
 
     // 将拍摄的图片保存到相册
@@ -266,109 +221,6 @@ public class MainActivity extends AppCompatActivity {
         Uri contentUri = Uri.fromFile(outputImage);
         mediaScanIntent.setData(contentUri);
         sendBroadcast(mediaScanIntent);
-    }
-    private void selectPhotoFromAlbum() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, SELECT_PHOTO);
-    }
-    private void saveImageToGallery(File imageFile) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        Uri contentUri = Uri.fromFile(imageFile);
-        mediaScanIntent.setData(contentUri);
-        sendBroadcast(mediaScanIntent);
-    }
-
-    private void saveImageToGallery(String imagePath) {
-        if (imagePath != null && !imagePath.isEmpty()) {
-            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            File file = new File(imagePath);
-            Uri contentUri = Uri.fromFile(file);
-            mediaScanIntent.setData(contentUri);
-            sendBroadcast(mediaScanIntent);
-        }
-    }
-    private String getRealPathFromURI(Uri contentUri) {
-        String filePath;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // 处理 Android 10 及以上版本的方式
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(contentUri);
-                File file = File.createTempFile("temp", "jpg", getCacheDir());
-                if (file != null) {
-                    FileOutputStream outputStream = new FileOutputStream(file);
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                    outputStream.close();
-                    filePath = file.getAbsolutePath();
-                } else {
-                    filePath = contentUri.getPath(); // 获取不到正确路径时的备选方案
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                filePath = contentUri.getPath(); // 获取不到正确路径时的备选方案
-            }
-        } else {
-            // 处理 Android 10 以下版本的方式
-            String[] proj = {MediaStore.Images.Media.DATA};
-            Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-            if (cursor == null) {
-                filePath = contentUri.getPath();
-            } else {
-                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                filePath = cursor.getString(column_index);
-                cursor.close();
-            }
-        }
-        return filePath;
-    }
-    //照片接收
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case TAKE_PHOTO:
-                if (resultCode == RESULT_OK) {
-                    try {
-                        //将图片显示
-                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                        img_photo.setImageBitmap(bitmap);
-                        galleryAddPic();
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "加载拍摄的照片时出错", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-            case SELECT_PHOTO:
-                if (resultCode == RESULT_OK && data != null) {
-                    try {
-                        // 处理从相册选择的图片
-                        Uri selectedImage = data.getData();
-                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(selectedImage));
-                        img_photo.setImageBitmap(bitmap);
-
-                        // 保存从相册选择的图片到相册
-                        saveImageToGallery(getRealPathFromURI(selectedImage));
-                        imageUri = selectedImage;
-
-                        // 启动网络线程处理数据
-                        startNetThread();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "从相册选择照片时出错", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }
     }
 
     private void startNetThread() {
@@ -381,26 +233,11 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    if (imageUri != null && "file".equals(imageUri.getScheme())) {
-                        // 图片来自拍照
-                        File imageFile = new File(imageUri.getPath());
-                        saveImageToGallery(imageFile);
-                    }
-
-
                     // 获取socket读写流
                     OutputStream os = socket.getOutputStream();
 
                     // 读取原图的文件流
-                    FileInputStream fis;
-
-                    if (imageUri != null && "content".equals(imageUri.getScheme())) {
-                        // 如果图片来自相册
-                        String imagePath = getRealPathFromURI(imageUri);
-                        fis = new FileInputStream(new File(imagePath));
-                    } else {
-                        fis = new FileInputStream(outputImage);
-                    }
+                    FileInputStream fis = new FileInputStream(outputImage);
 
                     byte[] buffer = new byte[8192]; // 设置缓冲区大小
                     int bytesRead;
@@ -433,4 +270,3 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
-
