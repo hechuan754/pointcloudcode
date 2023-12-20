@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
+    tools:context=".MainActivity">
+
+    <!-- 输入服务器IP的文本框 -->
+    <EditText
+        android:id="@+id/editTextIP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="输入服务器IP"
+        android:minHeight="48dp"
+        android:padding="10dp" />
+
+    <!-- 输入服务器端口的文本框 -->
+    <EditText
+        android:id="@+id/editTextPort"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextIP"
+        android:layout_marginTop="8dp"
+        android:hint="输入服务器端口"
+        android:minHeight="48dp"
+        android:padding="10dp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 连接服务器按钮 -->
+    <Button
+        android:id="@+id/btnConnectServer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextPort"
+        android:layout_marginTop="16dp"
+        android:text="连接服务器"
+        android:layout_marginBottom="8dp"
+        android:layout_centerInParent="true"/>
+
+    <!-- 显示连接状态的TextView -->
+    <TextView
+        android:id="@+id/textViewConnectionStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btnConnectServer"
+        android:layout_marginTop="8dp"
+        android:text=""
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_green_dark"
+        android:layout_centerInParent="true" />
+
+    <!-- 图片显示区域 -->
+    <ImageView
+        android:id="@+id/img_photo"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_below="@id/btnConnectServer"
+        android:layout_marginTop="48dp"
+        android:layout_centerInParent="true"
+        android:scaleType="fitCenter" />
+
+    <!-- 拍照上传按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="60dp">
+
+        <Button
+            android:id="@+id/client_submit"
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="拍照上传"
+            android:textSize="18sp"
+            android:layout_marginRight="16dp" />
+
+        <!-- 用 Space 添加间距 -->
+        <Space
+            android:layout_width="16dp"
+            android:layout_height="1dp"/>
+    </LinearLayout>
+
+
+</RelativeLayout>
