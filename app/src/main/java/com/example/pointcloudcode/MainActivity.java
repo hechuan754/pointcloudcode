@@ -10,6 +10,9 @@ import androidx.core.content.FileProvider;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
+
 
 import android.net.Uri;
 import android.os.Build;
@@ -25,8 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -36,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView predict;
     ImageView img_photo;
     private Button client_submit;
+    private String base64Data;
+    private String imagePath;
+
+
     private File outputImage;
     private EditText editTextIP;
     private EditText editTextPort;
@@ -164,8 +169,12 @@ public class MainActivity extends AppCompatActivity {
                 String ip = editTextIP.getText().toString();
                 String port = editTextPort.getText().toString();
 
-                String filename = "test.png";
+                String filename = "test.jpg";
                 outputImage = new File(getExternalCacheDir(), filename);  // 拍照后照片存储路径
+
+                // 保存图片的路径
+                imagePath = outputImage.getAbsolutePath();
+
                 try {
                     if (outputImage.exists()) {
                         outputImage.delete();
@@ -174,18 +183,24 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                if (Build.VERSION.SDK_INT >= 24) {
-                    // 图片的url
-                    imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
-                } else {
-                    imageUri = Uri.fromFile(outputImage);
-                }
+//                if (Build.VERSION.SDK_INT >= 24) {
+//                    // 图片的url
+//                    imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
+//                } else {
+//                    imageUri = Uri.fromFile(outputImage);
+//                }
+
+                // 使用 FileProvider 获取 Uri
+                imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
+
                 // 跳转界面到系统自带的拍照界面
-                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");  // 调用手机拍照功能其实就是启动一个activity
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);  // 指定图片存放位置，在onActivityResult里得到的Data将为null
-                startActivityForResult(intent, TAKE_PHOTO);  // 开启相机
+                startActivityForResult(intent, TAKE_PHOTO);
             }
         });
+
+
 
         // 新添加的按钮的事件处理
         btnConnectServer.setOnClickListener(new View.OnClickListener() {
@@ -215,12 +230,26 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // 将拍摄的图片保存到相册
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        Uri contentUri = Uri.fromFile(outputImage);
-        mediaScanIntent.setData(contentUri);
-        sendBroadcast(mediaScanIntent);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == TAKE_PHOTO && resultCode == RESULT_OK) {
+            // 拍照成功，处理图片
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            // 将 Bitmap 转为 Base64 字符串
+            base64Data = bitmapToBase64(bitmap);
+            // 发起网络请求，传入base64数据
+            startNetThread();
+        }
+    }
+
+
+    // 将 Bitmap 转为 Base64 字符串
+    private String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+        byte[] byteArray = outputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP);  // 使用 NO_WRAP 替代 DEFAULT
     }
 
     private void startNetThread() {
@@ -233,27 +262,19 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // 获取socket读写流
                     OutputStream os = socket.getOutputStream();
 
-                    // 读取原图的文件流
-                    FileInputStream fis = new FileInputStream(outputImage);
+                    int imageSize = base64Data.length();
+                    String imageSizeStr = String.valueOf(imageSize);
+                    os.write(imageSizeStr.getBytes());
+                    os.flush();
 
-                    byte[] buffer = new byte[8192]; // 设置缓冲区大小
-                    int bytesRead;
+                    os.write(base64Data.getBytes());
+                    os.flush();
 
-                    while ((bytesRead = fis.read(buffer)) != -1) {
-                        // 发送当前块的数据
-                        os.write(buffer, 0, bytesRead);
-                        os.flush();
-                    }
-
-                    // 关闭发送数据的数据流，数据发送完毕
                     socket.shutdownOutput();
 
-                    // 关闭连接和流
                     os.close();
-                    fis.close();
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -267,6 +288,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }).start();
     }
-
 
 }
