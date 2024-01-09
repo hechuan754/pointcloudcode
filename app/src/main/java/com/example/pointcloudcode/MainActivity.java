@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 
 
 import android.net.Uri;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Button client_submit;
     private String base64Data;
     private String imagePath;
-
+    private String originalImagePath;
 
     private File outputImage;
     private EditText editTextIP;
@@ -90,22 +91,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // 初始化按钮
-        btnUpload = findViewById(R.id.btnUpload);
-
-        // 给按钮设置点击事件监听器
-        btnUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (handler == null) {
-                    Log.e("MainActivity", "Handler is null. Cannot start network thread.");
-                    return;
-                }
-                // 处理上传按钮点击事件的逻辑
-                startNetThread();
-            }
-        });
 
         initViews();
         initEvent();
@@ -183,12 +168,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-//                if (Build.VERSION.SDK_INT >= 24) {
-//                    // 图片的url
-//                    imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
-//                } else {
-//                    imageUri = Uri.fromFile(outputImage);
-//                }
 
                 // 使用 FileProvider 获取 Uri
                 imageUri = FileProvider.getUriForFile(MainActivity.this, "com.example.pointcloudcode.fileprovider", outputImage);
@@ -238,8 +217,11 @@ public class MainActivity extends AppCompatActivity {
             Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
             // 将 Bitmap 转为 Base64 字符串
             base64Data = bitmapToBase64(bitmap);
-            // 发起网络请求，传入base64数据
-            startNetThread();
+
+            // 保存原图路径
+            originalImagePath = imagePath;
+
+            startNetThread();  // 传递原图路径
         }
     }
 
@@ -264,13 +246,24 @@ public class MainActivity extends AppCompatActivity {
 
                     OutputStream os = socket.getOutputStream();
 
-                    int imageSize = base64Data.length();
-                    String imageSizeStr = String.valueOf(imageSize);
-                    os.write(imageSizeStr.getBytes());
+                    // 将原图路径长度发送到服务器
+                    int imagePathSize = originalImagePath.length();
+                    String imagePathSizeStr = String.valueOf(imagePathSize);
+                    os.write(imagePathSizeStr.getBytes());
                     os.flush();
 
-                    os.write(base64Data.getBytes());
+                    // 将原图路径发送到服务器
+                    os.write(originalImagePath.getBytes());
                     os.flush();
+
+                    // 读取原图文件并发送到服务器
+                    FileInputStream fis = new FileInputStream(originalImagePath);
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
+                    fis.close();
 
                     socket.shutdownOutput();
 

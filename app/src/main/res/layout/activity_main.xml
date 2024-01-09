@@ -76,24 +76,17 @@
 
         <Button
             android:id="@+id/client_submit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="拍照"/>
+            android:layout_width="140dp"
+            android:layout_height="60dp"
+            android:text="拍照上传"
+            android:textSize="18sp"
+            android:layout_marginRight="16dp" />
 
+        <!-- 用 Space 添加间距 -->
         <Space
             android:layout_width="16dp"
             android:layout_height="1dp"/>
-
-        <Button
-            android:id="@+id/btnUpload"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="上传"/>
-
-
-
-
-
     </LinearLayout>
+
 
 </RelativeLayout>
