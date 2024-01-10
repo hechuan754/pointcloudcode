@@ -9,4 +9,8 @@ app传到电脑端的图片总是较小，不是原图，可能存在图片质�
 
 ##需求2，app保持摄像头开着，每隔固定时间截图上传图片到服务器端解码，解码成功后返回解码结果。
 即获取相机实时图像预览，然后实现实时图像采集上传。
-参考：https://blog.csdn.net/davidwillo/article/details/63688319
+参考：
+1、利用Android Camera2 的照相机api 实现 实时的图像采集与预览
+https://blog.csdn.net/davidwillo/article/details/63688319
+2、Android Camera2 全屏预览+实时获取预览帧进行图像处理
+https://blog.csdn.net/qq_38743313/article/details/101557079
