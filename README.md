@@ -14,3 +14,7 @@ app传到电脑端的图片总是较小，不是原图，可能存在图片质�
 https://blog.csdn.net/davidwillo/article/details/63688319
 2、Android Camera2 全屏预览+实时获取预览帧进行图像处理
 https://blog.csdn.net/qq_38743313/article/details/101557079
+3、Android Camera2预览和实时帧数据获取
+https://blog.csdn.net/chenhande1990chenhan/article/details/88353271
+4、CameraX 使用入门
+https://developer.android.google.cn/codelabs/camerax-getting-started?hl=zh-cn#3
