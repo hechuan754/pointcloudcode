@@ -18,3 +18,5 @@ https://blog.csdn.net/qq_38743313/article/details/101557079
 https://blog.csdn.net/chenhande1990chenhan/article/details/88353271
 4、CameraX 使用入门
 https://developer.android.google.cn/codelabs/camerax-getting-started?hl=zh-cn#3
+5、android 实时图像传输实现
+https://blog.csdn.net/NS_ice/article/details/124299438
